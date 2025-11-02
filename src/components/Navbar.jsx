@@ -1,21 +1,32 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext"; // ✅ Correct import
 
-function Navbar() {
+export default function Navbar() {
+  const { darkMode, toggleTheme } = useTheme();
+
   return (
-    <nav className="bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-blue-600">ProFinder</h1>
-        <div className="space-x-6 text-gray-700 font-medium">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
-          <Link to="/professional" className="hover:text-blue-600">Professional</Link>
-          <Link to="/user" className="hover:text-blue-600">User</Link>
-          <Link to="/admin" className="hover:text-blue-600">Admin</Link>
-          <Link to="/support" className="hover:text-blue-600">Support</Link>
-        </div>
+    <nav
+      className={`p-4 flex justify-between items-center shadow-md ${
+        darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
+      }`}
+    >
+      <h1 className="text-2xl font-bold">ProFinder</h1>
+      <div className="space-x-6">
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+        <Link to="/professional">Professional</Link>
+        <Link to="/support">Support</Link>
+        <Link to="/user">User</Link>
+        <Link to="/admin">Admin</Link>
+        <Link to="/contact">Contact</Link>
       </div>
+      <button
+        onClick={toggleTheme}
+        className="px-3 py-1 border rounded-md hover:bg-blue-500 hover:text-white"
+      >
+        {darkMode ? "Light Mode" : "Dark Mode"}
+      </button>
     </nav>
   );
 }
-
-export default Navbar;
