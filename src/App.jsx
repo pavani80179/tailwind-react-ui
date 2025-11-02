@@ -1,49 +1,41 @@
+// src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-// Components
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
-// Pages
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Professional from "./pages/Professional";
-import Contact from "./pages/Contact";
 import Support from "./pages/Support";
+import Contact from "./pages/Contact";
 import User from "./pages/User";
 import Admin from "./pages/Admin";
-
-// Context
 import { ThemeProvider } from "./context/ThemeContext";
+import PageTransition from "./components/PageTransition";
+import LoadingSpinner from "./components/LoadingSpinner";
 
-function App() {
+export default function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-          {/* ✅ Navbar */}
-          <Navbar />
-
-          {/* ✅ Page Routes */}
-          <main className="flex-grow p-6">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/professional" element={<Professional />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/user" element={<User />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/contact" element={<Contact />} />
-            </Routes>
-          </main>
-
-          {/* ✅ Footer */}
-          <Footer />
-        </div>
+        <Navbar />
+        <React.Suspense fallback={<LoadingSpinner />}>
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-all duration-500">
+            <PageTransition>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/professional" element={<Professional />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+              </Routes>
+            </PageTransition>
+          </div>
+        </React.Suspense>
+        <Footer />
       </Router>
     </ThemeProvider>
   );
 }
-
-export default App;
