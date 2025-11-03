@@ -1,5 +1,4 @@
-// src/App.jsx
-import React from "react";
+import React, { Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -11,7 +10,6 @@ import Contact from "./pages/Contact";
 import User from "./pages/User";
 import Admin from "./pages/Admin";
 import { ThemeProvider } from "./context/ThemeContext";
-import PageTransition from "./components/PageTransition";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 export default function App() {
@@ -19,21 +17,19 @@ export default function App() {
     <ThemeProvider>
       <Router>
         <Navbar />
-        <React.Suspense fallback={<LoadingSpinner />}>
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-all duration-500">
-            <PageTransition>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/professional" element={<Professional />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/user" element={<User />} />
-                <Route path="/admin" element={<Admin />} />
-              </Routes>
-            </PageTransition>
+        <Suspense fallback={<LoadingSpinner />}>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-all duration-500">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/professional" element={<Professional />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/user" element={<User />} />
+              <Route path="/admin" element={<Admin />} />
+            </Routes>
           </div>
-        </React.Suspense>
+        </Suspense>
         <Footer />
       </Router>
     </ThemeProvider>
