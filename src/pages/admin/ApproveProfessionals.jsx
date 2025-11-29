@@ -1,89 +1,109 @@
-import { useState } from "react";
-import useFetchData from "../../hooks/useFetchData";
+// src/pages/admin/ApproveProfessionals.jsx
+import React, { useEffect, useState } from "react";
+import { useApp } from "../../context/AppContext";
 
 export default function ApproveProfessionals() {
-  const { data, loading, error } = useFetchData("/data/professionals.json");
+  const { state } = useApp();
+  const { theme } = state;
 
-  // local state to keep track of approval
-  const [statusMap, setStatusMap] = useState({}); // { id: "approved" | "rejected" }
+  const [professionals, setProfessionals] = useState([]);
 
-  const handleStatus = (id, status) => {
-    setStatusMap((prev) => ({ ...prev, [id]: status }));
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const pros = users.filter((u) => u.role === "professional");
+    setProfessionals(pros);
+  }, []);
+
+  // Helper to update both localStorage and state
+  const updateProfessionalStatus = (email, newStatus) => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+
+    const updatedUsers = users.map((u) =>
+      u.role === "professional" && u.email === email
+        ? { ...u, status: newStatus }
+        : u
+    );
+
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setProfessionals(updatedUsers.filter((u) => u.role === "professional"));
+  };
+
+  const tableBase =
+    theme === "dark"
+      ? "bg-slate-800 text-slate-50"
+      : "bg-white text-slate-900";
+
+  const chip = (status) => {
+    const common = "px-2 py-1 rounded-full text-xs font-medium";
+    if (status === "approved")
+      return common + " bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+    if (status === "pending")
+      return common + " bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+    if (status === "rejected")
+      return common + " bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
+    return common + " bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800">
-        Approve Professionals
-      </h1>
-      <p className="text-sm text-slate-600">
-        Here admin can approve or reject professionals before they appear in search results.
-        (Demo using local JSON data.)
-      </p>
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold mb-2">Approve Professionals</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Review newly registered professionals and update their approval status.
+        </p>
+      </header>
 
-      {loading && <p>Loading professionals...</p>}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-
-      <div className="overflow-x-auto bg-white rounded-xl shadow">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-100">
-            <tr>
-              <th className="px-4 py-2 text-left">Name</th>
-              <th className="px-4 py-2 text-left">Category</th>
-              <th className="px-4 py-2 text-left">Location</th>
-              <th className="px-4 py-2 text-left">Rate</th>
-              <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((p) => (
-              <tr key={p.id} className="border-t">
-                <td className="px-4 py-2">{p.name}</td>
-                <td className="px-4 py-2">{p.category}</td>
-                <td className="px-4 py-2">{p.location}</td>
-                <td className="px-4 py-2">₹{p.rate}/hr</td>
-                <td className="px-4 py-2">
-                  {statusMap[p.id] ? (
-                    <span
-                      className={
-                        statusMap[p.id] === "approved"
-                          ? "text-green-600 font-semibold"
-                          : "text-red-500 font-semibold"
-                      }
-                    >
-                      {statusMap[p.id].toUpperCase()}
+      <div className={`${tableBase} rounded-xl shadow p-4 overflow-x-auto`}>
+        {professionals.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-300">
+            No professional registrations yet.
+          </p>
+        ) : (
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <th className="text-left py-2 pr-4">Name</th>
+                <th className="text-left py-2 pr-4">Email</th>
+                <th className="text-left py-2 pr-4">Status</th>
+                <th className="text-left py-2 pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {professionals.map((pro) => (
+                <tr
+                  key={pro.email}
+                  className="border-b border-slate-100 dark:border-slate-700/60"
+                >
+                  <td className="py-2 pr-4">{pro.name}</td>
+                  <td className="py-2 pr-4">{pro.email}</td>
+                  <td className="py-2 pr-4">
+                    <span className={chip(pro.status || "pending")}>
+                      {pro.status || "pending"}
                     </span>
-                  ) : (
-                    <span className="text-slate-400">Pending</span>
-                  )}
-                </td>
-                <td className="px-4 py-2 space-x-2">
-                  <button
-                    onClick={() => handleStatus(p.id, "approved")}
-                    className="px-3 py-1 text-xs bg-green-500 text-white rounded"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleStatus(p.id, "rejected")}
-                    className="px-3 py-1 text-xs bg-red-500 text-white rounded"
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {!loading && !error && data.length === 0 && (
-              <tr>
-                <td className="px-4 py-4 text-center text-slate-500" colSpan="6">
-                  No professionals found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="py-2 pr-4 space-x-2">
+                    <button
+                      onClick={() =>
+                        updateProfessionalStatus(pro.email, "approved")
+                      }
+                      className="px-3 py-1 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() =>
+                        updateProfessionalStatus(pro.email, "rejected")
+                      }
+                      className="px-3 py-1 text-xs rounded-lg bg-rose-600 text-white hover:bg-rose-700"
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
