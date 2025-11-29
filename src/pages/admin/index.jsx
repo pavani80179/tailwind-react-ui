@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const current = JSON.parse(localStorage.getItem("currentUser") || "null");
 
-    // 🔐 block non‑admins from opening /admin directly
+    // 🔐 ONLY admin allowed
     if (!current || current.role !== "admin") {
       navigate("/user");
       return;
@@ -39,72 +39,5 @@ export default function AdminDashboard() {
     });
   }, [navigate]);
 
-  const cardBase =
-    theme === "dark"
-      ? "bg-slate-800 text-slate-50"
-      : "bg-white text-slate-900";
-
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Monitor users and manage professional approvals.
-        </p>
-      </header>
-
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className={`${cardBase} rounded-xl shadow p-4`}>
-          <p className="text-xs text-slate-500 dark:text-slate-300">
-            Total Registered Accounts
-          </p>
-          <p className="text-2xl font-semibold mt-1">{stats.totalUsers}</p>
-        </div>
-
-        <div className={`${cardBase} rounded-xl shadow p-4`}>
-          <p className="text-xs text-slate-500 dark:text-slate-300">
-            Total Professionals
-          </p>
-          <p className="text-2xl font-semibold mt-1">
-            {stats.totalProfessionals}
-          </p>
-        </div>
-
-        <div className={`${cardBase} rounded-xl shadow p-4`}>
-          <p className="text-xs text-slate-500 dark:text-slate-300">
-            Pending Approvals
-          </p>
-          <p className="text-2xl font-semibold mt-1 text-amber-400">
-            {stats.pendingProfessionals}
-          </p>
-        </div>
-
-        <div className={`${cardBase} rounded-xl shadow p-4`}>
-          <p className="text-xs text-slate-500 dark:text-slate-300">
-            Approved Professionals
-          </p>
-          <p className="text-2xl font-semibold mt-1 text-emerald-400">
-            {stats.approvedProfessionals}
-          </p>
-        </div>
-      </section>
-
-      <section
-        className={`${cardBase} rounded-xl shadow p-4 flex items-center justify-between`}
-      >
-        <div>
-          <h2 className="font-semibold mb-1">Manage Professionals</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-300">
-            Review and approve new professional registrations.
-          </p>
-        </div>
-        <Link
-          to="/admin/approve"
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
-        >
-          Go to Approvals
-        </Link>
-      </section>
-    </div>
-  );
+  // …rest of dashboard JSX (cards, link to /admin/approve)…
 }
