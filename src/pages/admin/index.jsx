@@ -1,11 +1,12 @@
 // src/pages/admin/index.jsx
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 
 export default function AdminDashboard() {
   const { state } = useApp();
   const { theme } = state;
+  const navigate = useNavigate();
 
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -15,6 +16,14 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
+    const current = JSON.parse(localStorage.getItem("currentUser") || "null");
+
+    // 🔐 block non‑admins from opening /admin directly
+    if (!current || current.role !== "admin") {
+      navigate("/user");
+      return;
+    }
+
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const professionals = users.filter((u) => u.role === "professional");
 
@@ -28,7 +37,7 @@ export default function AdminDashboard() {
         (p) => p.status === "approved"
       ).length,
     });
-  }, []);
+  }, [navigate]);
 
   const cardBase =
     theme === "dark"
@@ -51,6 +60,7 @@ export default function AdminDashboard() {
           </p>
           <p className="text-2xl font-semibold mt-1">{stats.totalUsers}</p>
         </div>
+
         <div className={`${cardBase} rounded-xl shadow p-4`}>
           <p className="text-xs text-slate-500 dark:text-slate-300">
             Total Professionals
@@ -59,6 +69,7 @@ export default function AdminDashboard() {
             {stats.totalProfessionals}
           </p>
         </div>
+
         <div className={`${cardBase} rounded-xl shadow p-4`}>
           <p className="text-xs text-slate-500 dark:text-slate-300">
             Pending Approvals
@@ -67,6 +78,7 @@ export default function AdminDashboard() {
             {stats.pendingProfessionals}
           </p>
         </div>
+
         <div className={`${cardBase} rounded-xl shadow p-4`}>
           <p className="text-xs text-slate-500 dark:text-slate-300">
             Approved Professionals
@@ -77,7 +89,9 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section className={`${cardBase} rounded-xl shadow p-4 flex items-center justify-between`}>
+      <section
+        className={`${cardBase} rounded-xl shadow p-4 flex items-center justify-between`}
+      >
         <div>
           <h2 className="font-semibold mb-1">Manage Professionals</h2>
           <p className="text-sm text-slate-500 dark:text-slate-300">

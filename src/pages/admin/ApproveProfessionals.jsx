@@ -14,7 +14,6 @@ export default function ApproveProfessionals() {
     setProfessionals(pros);
   }, []);
 
-  // Helper to update both localStorage and state
   const updateProfessionalStatus = (email, newStatus) => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
@@ -33,15 +32,30 @@ export default function ApproveProfessionals() {
       ? "bg-slate-800 text-slate-50"
       : "bg-white text-slate-900";
 
-  const chip = (status) => {
-    const common = "px-2 py-1 rounded-full text-xs font-medium";
-    if (status === "approved")
-      return common + " bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
-    if (status === "pending")
-      return common + " bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
-    if (status === "rejected")
-      return common + " bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
-    return common + " bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
+  const chipClass = (status) => {
+    const base = "px-2 py-1 rounded-full text-xs font-medium";
+    if (status === "approved") {
+      return (
+        base +
+        " bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+      );
+    }
+    if (status === "pending") {
+      return (
+        base +
+        " bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+      );
+    }
+    if (status === "rejected") {
+      return (
+        base +
+        " bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+      );
+    }
+    return (
+      base +
+      " bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+    );
   };
 
   return (
@@ -77,7 +91,7 @@ export default function ApproveProfessionals() {
                   <td className="py-2 pr-4">{pro.name}</td>
                   <td className="py-2 pr-4">{pro.email}</td>
                   <td className="py-2 pr-4">
-                    <span className={chip(pro.status || "pending")}>
+                    <span className={chipClass(pro.status || "pending")}>
                       {pro.status || "pending"}
                     </span>
                   </td>
