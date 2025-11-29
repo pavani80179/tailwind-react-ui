@@ -1,87 +1,96 @@
+// src/pages/admin/index.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useApp } from "../../context/AppContext";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const [professionals, setProfessionals] = useState([]);
+  const { state } = useApp();
+  const { theme } = state;
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalProfessionals: 0,
+    pendingProfessionals: 0,
+    approvedProfessionals: 0,
+  });
 
   useEffect(() => {
-    const storedPros = JSON.parse(localStorage.getItem("professionals")) || [];
-    setProfessionals(storedPros);
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const professionals = users.filter((u) => u.role === "professional");
+
+    setStats({
+      totalUsers: users.length,
+      totalProfessionals: professionals.length,
+      pendingProfessionals: professionals.filter(
+        (p) => p.status === "pending"
+      ).length,
+      approvedProfessionals: professionals.filter(
+        (p) => p.status === "approved"
+      ).length,
+    });
   }, []);
 
+  const cardBase =
+    theme === "dark"
+      ? "bg-slate-800 text-slate-50"
+      : "bg-white text-slate-900";
+
   return (
-    <div className="p-10">
-      <h1 className="text-4xl font-bold text-center mb-6">Admin Dashboard</h1>
-      <p className="text-center mb-8">
-        Control your entire platform from here. Manage professionals, users, and security settings efficiently.
-      </p>
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Monitor users and manage professional approvals.
+        </p>
+      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          onClick={() => navigate("/admin/approve")}
-          className="cursor-pointer p-6 bg-white dark:bg-gray-800 shadow rounded-xl hover:shadow-lg transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Approve New Professionals</h2>
-          <p>Review and verify newly registered professionals.</p>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`${cardBase} rounded-xl shadow p-4`}>
+          <p className="text-xs text-slate-500 dark:text-slate-300">
+            Total Registered Accounts
+          </p>
+          <p className="text-2xl font-semibold mt-1">{stats.totalUsers}</p>
         </div>
-
-        <div
-          onClick={() => navigate("/admin/manage-users")}
-          className="cursor-pointer p-6 bg-white dark:bg-gray-800 shadow rounded-xl hover:shadow-lg transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Manage Users</h2>
-          <p>View, update, or remove user accounts securely.</p>
+        <div className={`${cardBase} rounded-xl shadow p-4`}>
+          <p className="text-xs text-slate-500 dark:text-slate-300">
+            Total Professionals
+          </p>
+          <p className="text-2xl font-semibold mt-1">
+            {stats.totalProfessionals}
+          </p>
         </div>
-
-        <div
-          onClick={() => navigate("/admin/payment-management")}
-          className="cursor-pointer p-6 bg-white dark:bg-gray-800 shadow rounded-xl hover:shadow-lg transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Payment Management</h2>
-          <p>Monitor transactions and update billing records.</p>
+        <div className={`${cardBase} rounded-xl shadow p-4`}>
+          <p className="text-xs text-slate-500 dark:text-slate-300">
+            Pending Approvals
+          </p>
+          <p className="text-2xl font-semibold mt-1 text-amber-400">
+            {stats.pendingProfessionals}
+          </p>
         </div>
-
-        <div
-          onClick={() => navigate("/admin/system-reports")}
-          className="cursor-pointer p-6 bg-white dark:bg-gray-800 shadow rounded-xl hover:shadow-lg transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">System Reports</h2>
-          <p>Access analytics and performance data.</p>
+        <div className={`${cardBase} rounded-xl shadow p-4`}>
+          <p className="text-xs text-slate-500 dark:text-slate-300">
+            Approved Professionals
+          </p>
+          <p className="text-2xl font-semibold mt-1 text-emerald-400">
+            {stats.approvedProfessionals}
+          </p>
         </div>
+      </section>
 
-        <div
-          onClick={() => navigate("/admin/security-settings")}
-          className="cursor-pointer p-6 bg-white dark:bg-gray-800 shadow rounded-xl hover:shadow-lg transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Security Settings</h2>
-          <p>Manage data protection and access permissions.</p>
+      <section className={`${cardBase} rounded-xl shadow p-4 flex items-center justify-between`}>
+        <div>
+          <h2 className="font-semibold mb-1">Manage Professionals</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-300">
+            Review and approve new professional registrations.
+          </p>
         </div>
-      </div>
-
-      <h2 className="text-2xl font-bold mt-12 mb-4">Registered Professionals</h2>
-      {professionals.length === 0 ? (
-        <p>No professionals registered yet.</p>
-      ) : (
-        <table className="min-w-full border border-gray-300 dark:border-gray-700">
-          <thead>
-            <tr className="bg-gray-200 dark:bg-gray-700">
-              <th className="p-3 border">Name</th>
-              <th className="p-3 border">Email</th>
-              <th className="p-3 border">Category</th>
-            </tr>
-          </thead>
-          <tbody>
-            {professionals.map((pro, index) => (
-              <tr key={index} className="text-center border-t">
-                <td className="p-3 border">{pro.name}</td>
-                <td className="p-3 border">{pro.email}</td>
-                <td className="p-3 border">{pro.category}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        <Link
+          to="/admin/approve"
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+        >
+          Go to Approvals
+        </Link>
+      </section>
     </div>
   );
 }

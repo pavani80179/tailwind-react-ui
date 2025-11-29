@@ -36,14 +36,26 @@ export default function User() {
     );
 
     if (existingUser) {
-      setMessage("❌ User already registered with this email.");
+      setMessage("❌ User already registered with this email for this role.");
       return;
     }
 
-    const newUser = { ...formData, role };
+    // 👉 KEY CHANGE: professionals start as PENDING, users as APPROVED
+    const newUser = {
+      ...formData,
+      role,
+      status: role === "professional" ? "pending" : "approved",
+      createdAt: new Date().toISOString(),
+    };
+
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
-    setMessage("✅ Registration successful! Please login.");
+
+    setMessage(
+      role === "professional"
+        ? "✅ Registration successful! Waiting for admin approval."
+        : "✅ Registration successful! Please login."
+    );
     setFormData({ name: "", email: "", password: "" });
     setIsLogin(true);
   };
@@ -57,11 +69,18 @@ export default function User() {
         u.role === role
     );
 
-    if (user) {
-      setMessage(`✅ Welcome back, ${user.name}!`);
-    } else {
+    if (!user) {
       setMessage("❌ Invalid credentials or role.");
+      return;
     }
+
+    if (user.role === "professional" && user.status !== "approved") {
+      setMessage("⏳ Your professional account is not approved yet by admin.");
+      return;
+    }
+
+    setMessage(`✅ Welcome back, ${user.name}!`);
+    // (Optional: here you can navigate based on role later)
   };
 
   const cardClasses =
@@ -76,7 +95,9 @@ export default function User() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-6">
-      <div className={`${cardClasses} shadow-2xl rounded-2xl p-8 w-full max-w-md transition-colors`}>
+      <div
+        className={`${cardClasses} shadow-2xl rounded-2xl p-8 w-full max-w-md transition-colors`}
+      >
         <h1 className="text-3xl font-bold text-center mb-6">
           {isLogin ? "User Login" : "User / Professional Registration"}
         </h1>
@@ -141,7 +162,7 @@ export default function User() {
           {isLogin ? "Login" : "Register"}
         </button>
 
-        {/* Toggle between Login & Register */}
+        {/* Toggle Login/Register */}
         <p className="mt-4 text-center text-sm">
           {isLogin ? (
             <>
