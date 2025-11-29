@@ -1,140 +1,122 @@
-import React from "react";
-import { useTheme } from "../context/ThemeContext";
-
-const professionals = [
-  {
-    name: "Ramesh Kumar",
-    job: "Plumber",
-    experience: "8 years",
-    location: "Hyderabad",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/809/809957.png",
-    description:
-      "Expert in repairing leaks, installing pipes, and maintaining bathroom fittings. Reliable and punctual.",
-  },
-  {
-    name: "Sunita Devi",
-    job: "Gardener",
-    experience: "5 years",
-    location: "Bengaluru",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/765/765560.png",
-    description:
-      "Loves creating beautiful green spaces, trimming, planting, and maintaining gardens with care.",
-  },
-  {
-    name: "Mohammed Irfan",
-    job: "Carpenter",
-    experience: "10 years",
-    location: "Chennai",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/679/679922.png",
-    description:
-      "Specialist in furniture repair, custom wooden interiors, and modular kitchen fitting.",
-  },
-  {
-    name: "Priya Sharma",
-    job: "Home Tutor",
-    experience: "6 years",
-    location: "Delhi",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/3135/3135745.png",
-    description:
-      "Teaches Math and Science for classes 6–10 with a student-friendly and result-oriented approach.",
-  },
-  {
-    name: "Arun Patel",
-    job: "Electrician",
-    experience: "7 years",
-    location: "Mumbai",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-    description:
-      "Handles wiring, lighting, inverter setup, and electrical safety checks efficiently.",
-  },
-  {
-    name: "Lakshmi Bai",
-    job: "Tailor",
-    experience: "12 years",
-    location: "Pune",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/3941/3941224.png",
-    description:
-      "Skilled in women’s fashion stitching, alterations, and custom ethnic designs.",
-  },
-  {
-    name: "Vijay Singh",
-    job: "Painter",
-    experience: "9 years",
-    location: "Jaipur",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/1545/1545085.png",
-    description:
-      "Professional house painter who ensures smooth finishes and timely completion of work.",
-  },
-  {
-    name: "Kavitha ",
-    job: "House Cleaner",
-    experience: "4 years",
-    location: "Visakhapatnam",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/4021/4021733.png",
-    description:
-      "Provides deep cleaning services for homes, kitchens, and offices with top hygiene standards.",
-  },
-];
+// src/pages/Professional.jsx
+import React, { useState } from "react";
+import useProfessionals from "../hooks/useProfessionals";
+import { useApp } from "../context/AppContext";
 
 export default function Professional() {
-  const { darkMode } = useTheme();
+  const { state } = useApp();
+  const { theme } = state;
+
+  const { professionals, loading, error } = useProfessionals();
+  const [search, setSearch] = useState("");
+
+  const pageTitleClasses =
+    theme === "dark"
+      ? "text-2xl font-bold mb-4 text-slate-50"
+      : "text-2xl font-bold mb-4 text-slate-900";
+
+  const cardBase =
+    theme === "dark"
+      ? "bg-slate-800 text-slate-50"
+      : "bg-white text-slate-900";
+
+  const badgeClasses =
+    theme === "dark"
+      ? "inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-700 text-slate-100"
+      : "inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-100 text-slate-700";
+
+  const inputClasses =
+    theme === "dark"
+      ? "w-full max-w-md px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      : "w-full max-w-md px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+  const filteredProfessionals = professionals.filter((p) => {
+    const term = search.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(term) ||
+      p.city.toLowerCase().includes(term) ||
+      p.company.toLowerCase().includes(term) ||
+      p.role.toLowerCase().includes(term) ||
+      p.category.toLowerCase().includes(term)
+    );
+  });
 
   return (
-    <div
-      className={`min-h-screen py-12 px-6 transition-colors duration-300 ${
-        darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
-      }`}
-    >
-      <h1 className="text-4xl font-bold text-center mb-10">
-        🧰 Meet Our Professionals
-      </h1>
-      <p className="text-center max-w-3xl mx-auto mb-12 text-lg">
-        Explore skilled service providers near you — from plumbers and carpenters to home tutors
-        and tailors. Each professional is verified and experienced in their craft.
-      </p>
-
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {professionals.map((pro, index) => (
-          <div
-            key={index}
-            className={`rounded-2xl shadow-lg p-6 hover:scale-105 transform transition-all duration-300 ${
-              darkMode
-                ? "bg-gray-800 hover:bg-gray-700"
-                : "bg-white hover:bg-blue-50"
-            }`}
-          >
-            <img
-              src={pro.image}
-              alt={pro.name}
-              className="w-20 h-20 mx-auto mb-4"
-            />
-            <h2 className="text-xl font-semibold text-center">{pro.name}</h2>
-            <p className="text-center text-blue-500 font-medium">{pro.job}</p>
-            <p className="text-center text-sm mt-2">{pro.location}</p>
-            <p className="text-sm mt-3 text-center">{pro.description}</p>
-            <p className="text-sm mt-3 text-center text-gray-400">
-              Experience: {pro.experience}
-            </p>
-            <button
-              className={`mt-4 w-full py-2 rounded-md font-medium ${
-                darkMode
-                  ? "bg-blue-600 hover:bg-blue-500"
-                  : "bg-blue-500 hover:bg-blue-600"
-              } text-white`}
-            >
-              Connect Now
-            </button>
-          </div>
-        ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className={pageTitleClasses}>Find Professionals</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Hire trusted home service experts like electricians, plumbers, cooks,
+          gardeners, tutors and more.
+        </p>
       </div>
+
+      {/* Search bar */}
+      <div className="flex justify-between items-center gap-4 flex-wrap">
+        <input
+          type="text"
+          placeholder="Search by name, city, role, or category..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={inputClasses}
+        />
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          Showing {filteredProfessionals.length} of {professionals.length} professionals
+        </span>
+      </div>
+
+      {/* Loading / Error */}
+      {loading && (
+        <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-300">
+          Fetching professionals from API...
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-8 text-center text-sm text-red-500">
+          {error}
+        </div>
+      )}
+
+      {/* Grid */}
+      {!loading && !error && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredProfessionals.map((pro) => (
+            <div
+              key={pro.id}
+              className={`${cardBase} rounded-xl shadow-md p-4 border border-slate-200/60 dark:border-slate-700/60 transition-transform hover:-translate-y-1 hover:shadow-lg`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h2 className="font-semibold text-base">{pro.name}</h2>
+                <span className={badgeClasses}>{pro.category}</span>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-300 mb-1">
+                {pro.role}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-300 mb-3">
+                📍 {pro.city}
+              </p>
+
+              <div className="space-y-1 text-xs">
+                <p className="text-slate-600 dark:text-slate-200">
+                  ✉️ {pro.email}
+                </p>
+                <p className="text-slate-600 dark:text-slate-200">
+                  📞 {pro.phone}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {filteredProfessionals.length === 0 && (
+            <div className="col-span-full text-center text-sm text-slate-500 dark:text-slate-300 mt-8">
+              No professionals found for “{search}”.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

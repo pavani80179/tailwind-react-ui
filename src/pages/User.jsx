@@ -1,77 +1,178 @@
-import React from "react";
+// src/pages/User.jsx
+import React, { useState, useEffect } from "react";
+import { useApp } from "../context/AppContext";
 
-const users = [
-  {
-    name: "seetha",
-    email: "seetha.r@example.com",
-    role: "Designer",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    name: "Johny",
-    email: "johny.mr@example.com",
-    role: "Developer",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    name: "leela",
-    email: "leela.h@example.com",
-    role: "Content Writer",
-    status: "Inactive",
-    avatar:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
-  },
-];
+export default function User() {
+  const { state } = useApp();
+  const { theme } = state;
 
-const User = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState("user");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    localStorage.setItem("users", JSON.stringify(users));
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleRegister = () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      setMessage("⚠️ Please fill all fields.");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const existingUser = users.find(
+      (u) => u.email === formData.email && u.role === role
+    );
+
+    if (existingUser) {
+      setMessage("❌ User already registered with this email.");
+      return;
+    }
+
+    const newUser = { ...formData, role };
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
+    setMessage("✅ Registration successful! Please login.");
+    setFormData({ name: "", email: "", password: "" });
+    setIsLogin(true);
+  };
+
+  const handleLogin = () => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(
+      (u) =>
+        u.email === formData.email &&
+        u.password === formData.password &&
+        u.role === role
+    );
+
+    if (user) {
+      setMessage(`✅ Welcome back, ${user.name}!`);
+    } else {
+      setMessage("❌ Invalid credentials or role.");
+    }
+  };
+
+  const cardClasses =
+    theme === "dark"
+      ? "bg-slate-800 text-slate-50"
+      : "bg-white text-slate-900";
+
+  const inputClasses =
+    theme === "dark"
+      ? "w-full p-2 mb-3 border rounded-lg bg-slate-700 text-white"
+      : "w-full p-2 mb-3 border rounded-lg bg-white text-slate-900";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 p-10">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800 dark:text-white">
-        User Dashboard
-      </h1>
-      <p className="text-center text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-        View all registered users, their details, and account activity in one
-        place.
-      </p>
+    <div className="min-h-[80vh] flex items-center justify-center p-6">
+      <div className={`${cardClasses} shadow-2xl rounded-2xl p-8 w-full max-w-md transition-colors`}>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          {isLogin ? "User Login" : "User / Professional Registration"}
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {users.map((user, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2"
+        {/* Role Selection */}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={() => setRole("user")}
+            className={`px-4 py-2 rounded-l-lg border text-sm ${
+              role === "user"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-slate-800"
+            }`}
           >
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-full h-56 object-cover rounded-t-2xl"
-            />
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                {user.name}
-              </h2>
-              <p className="text-blue-600 dark:text-blue-400">{user.role}</p>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {user.email}
-              </p>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  user.status === "Active"
-                    ? "bg-green-200 text-green-800"
-                    : "bg-red-200 text-red-800"
-                }`}
+            User
+          </button>
+          <button
+            onClick={() => setRole("professional")}
+            className={`px-4 py-2 rounded-r-lg border text-sm ${
+              role === "professional"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-slate-800"
+            }`}
+          >
+            Professional
+          </button>
+        </div>
+
+        {/* Input Fields */}
+        {!isLogin && (
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            className={inputClasses}
+          />
+        )}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email Address"
+          value={formData.email}
+          onChange={handleChange}
+          className={inputClasses}
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          className={`${inputClasses} mb-4`}
+        />
+
+        {/* Submit Button */}
+        <button
+          onClick={isLogin ? handleLogin : handleRegister}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {isLogin ? "Login" : "Register"}
+        </button>
+
+        {/* Toggle between Login & Register */}
+        <p className="mt-4 text-center text-sm">
+          {isLogin ? (
+            <>
+              Don’t have an account?{" "}
+              <button
+                onClick={() => setIsLogin(false)}
+                className="text-blue-400 hover:underline"
               >
-                {user.status}
-              </span>
-            </div>
+                Register here
+              </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{" "}
+              <button
+                onClick={() => setIsLogin(true)}
+                className="text-blue-400 hover:underline"
+              >
+                Login here
+              </button>
+            </>
+          )}
+        </p>
+
+        {/* Status Message */}
+        {message && (
+          <div className="mt-4 text-center text-sm font-semibold text-blue-300">
+            {message}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
-};
-
-export default User;
+}

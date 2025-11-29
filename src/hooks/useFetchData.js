@@ -1,26 +1,33 @@
-// src/hooks/useFetchData.js
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export const useFetchData = (url) => {
+export default function useFetchData(url) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    let isMounted = true; // prevents state update after unmount
+
+    async function fetchData() {
+      setLoading(true);
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const json = await response.json();
-        setData(json);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network Error");
+        const json = await res.json();
+        if (isMounted) setData(json);
       } catch (err) {
-        setError(err.message);
+        if (isMounted) setError("Failed to fetch data. Please try later.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
-    };
+    }
+
     fetchData();
-  }, [url]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [url]); // refetch if URL changes
 
   return { data, loading, error };
-};
+}
