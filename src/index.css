@@ -30,3 +30,59 @@ body {
     transform: translateY(0);
   }
 }
+/* ---------- animated gradient overlay ---------- */
+.animated-gradient {
+  background: linear-gradient(
+    120deg,
+    rgba(255,140,120,0.10),
+    rgba(120,140,255,0.12),
+    rgba(80,200,180,0.08)
+  );
+  background-size: 300% 300%;
+  animation: gradientShift 12s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---------- floating job icons ---------- */
+.floating {
+  will-change: transform, opacity;
+  animation: floatBob 6s ease-in-out infinite;
+  opacity: 0.95;
+}
+
+@keyframes floatBob {
+  0%   { transform: translate(-50%, -50%) translateY(0) scale(1); }
+  25%  { transform: translate(-50%, -50%) translateY(-8px) scale(1.03); }
+  50%  { transform: translate(-50%, -50%) translateY(0) scale(1); }
+  75%  { transform: translate(-50%, -50%) translateY(6px) scale(0.99); }
+  100% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+
+/* ---------- fade/slide utility (works with your show state) ---------- */
+.fade-in {
+  animation: fadeIn 0.9s ease-out forwards;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- CTA button styles ---------- */
+.cta-btn {
+  @apply inline-flex items-center gap-3 px-5 py-2 rounded-full font-semibold shadow-lg;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  color: white;
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.cta-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(59,130,246,0.18); }
+.cta-btn:active { transform: translateY(-1px); }
+
+/* small responsive tweak: hide floating icons on tiny screens */
+@media (max-width: 640px) {
+  .floating { display: none; }
+}
