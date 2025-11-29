@@ -21,7 +21,7 @@ export default function User() {
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // OPTIONAL: uncomment once if you want a default admin account:
+    // OPTIONAL: uncomment once to auto-create an admin, then comment again
     // if (!users.find((u) => u.role === "admin")) {
     //   users.push({
     //     name: "Admin",
@@ -56,7 +56,7 @@ export default function User() {
       return;
     }
 
-    // Professionals require approval → start as pending
+    // professionals need admin approval => pending
     const newUser = {
       ...formData,
       role,
@@ -96,18 +96,18 @@ export default function User() {
       return;
     }
 
-    // 🔐 Save logged‑in user globally for route protection
+    // save current logged in user for route protection
     localStorage.setItem("currentUser", JSON.stringify(user));
 
     setMessage(`✅ Welcome back, ${user.name}!`);
 
-    // Role‑based navigation
+    // redirect based on role
     if (user.role === "admin") {
       navigate("/admin");
     } else if (user.role === "professional") {
       navigate("/professional");
     } else {
-      navigate("/"); // normal user → homepage
+      navigate("/");
     }
   };
 
@@ -164,7 +164,7 @@ export default function User() {
           </button>
         </div>
 
-        {/* Form fields */}
+        {/* Form */}
         {!isLogin && (
           <input
             type="text"
