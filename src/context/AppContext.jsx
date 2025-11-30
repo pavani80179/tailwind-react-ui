@@ -1,30 +1,60 @@
 // src/context/AppContext.jsx
-import { createContext, useContext } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+} from "react";
 
 const AppContext = createContext();
 
 const initialState = {
-  theme: "light", // only theme for now
+  theme: "dark", // default when app first loads
 };
 
-function appReducer(state, action) {
+function reducer(state, action) {
   switch (action.type) {
     case "TOGGLE_THEME":
-      return { ...state, theme: state.theme === "light" ? "dark" : "light" };
+      return {
+        ...state,
+        theme: state.theme === "dark" ? "light" : "dark",
+      };
+    case "SET_THEME":
+      return { ...state, theme: action.payload };
     default:
       return state;
   }
 }
 
 export function AppProvider({ children }) {
-  const [state, setState] = useLocalStorage("appState", initialState);
+  // load saved theme from localStorage once
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialState,
+    (defaultState) => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light" || saved === "dark") {
+          return { ...defaultState, theme: saved };
+        }
+      }
+      return defaultState;
+    }
+  );
 
-  function dispatch(action) {
-    setState((prev) => appReducer(prev, action));
-  }
+  // whenever theme changes, update <html class="dark"> and store it
+  useEffect(() => {
+    const root = document.documentElement;
+    if (state.theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("theme", state.theme);
+  }, [state.theme]);
 
   const value = { state, dispatch };
+
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 

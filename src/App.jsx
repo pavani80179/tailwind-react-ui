@@ -1,48 +1,43 @@
 // src/App.jsx
+import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { useApp } from "./context/AppContext";
+
 import Navbar from "./components/Navbar";
 
-import Home from "./pages/Home.jsx";
-import User from "./pages/User.jsx";
-import Professional from "./pages/Professional.jsx";
-import ProfessionalRegister from "./pages/ProfessionalRegister.jsx";
-import Support from "./pages/Support.jsx";
-import Contact from "./pages/Contact.jsx";
-import About from "./pages/About.jsx";
-import AdminDashboard from "./pages/admin/index.jsx";
-import ApproveProfessionals from "./pages/admin/ApproveProfessionals.jsx";
+import Home from "./pages/Home";
+import User from "./pages/User";
+import Professional from "./pages/Professional";
+import Support from "./pages/Support";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
 
-function App() {
-  const { state } = useApp();
-  const { theme } = state;
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import SystemReports from "./pages/admin/SystemReports";
 
-  const appClasses =
-    theme === "dark"
-      ? "min-h-screen bg-slate-900 text-slate-50 transition-colors"
-      : "min-h-screen bg-slate-100 text-slate-900 transition-colors";
-
+export default function App() {
   return (
-    <div className={appClasses}>
+    <div className="min-h-screen">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-6">
+
+      <main className="max-w-7xl mx-auto px-4 pt-20 pb-10">
         <Routes>
+          {/* main pages */}
           <Route path="/" element={<Home />} />
           <Route path="/user" element={<User />} />
           <Route path="/professional" element={<Professional />} />
-          <Route
-            path="/professional-register"
-            element={<ProfessionalRegister />}
-          />
           <Route path="/support" element={<Support />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/approve" element={<ApproveProfessionals />} />
+
+          {/* admin */}
+          <Route path="/admin" element={<SystemReports />} />
+
+          {/* booking + payment */}
+          <Route path="/payment/:id" element={<Payment />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </main>
     </div>
   );
 }
-
-export default App;

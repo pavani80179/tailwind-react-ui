@@ -1,107 +1,141 @@
 // src/pages/User.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
 
 export default function User() {
   const navigate = useNavigate();
-  const { state } = useApp();
-  const { theme } = state;
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState("user"); // "user" | "professional" | "admin"
-  const [formData, setFormData] = useState({
+  const [mode, setMode] = useState("register"); // "register" | "login"
+  const [activeRole, setActiveRole] = useState("user"); // "user" | "professional" | "admin"
+
+  const [registerForm, setRegisterForm] = useState({
     name: "",
     email: "",
     password: "",
+    phone: "",
+    aadhaar: "",
+    gender: "",
+    experience: "",
+    skill: "",
+    area: "",
+    avgCharge: "", // 💰 average amount per service
   });
+
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [message, setMessage] = useState("");
 
-  // Ensure users array exists (and optional admin seeding)
-  useEffect(() => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    // OPTIONAL: uncomment once to auto-create an admin, then comment again
-    // if (!users.find((u) => u.role === "admin")) {
-    //   users.push({
-    //     name: "Admin",
-    //     email: "admin@local",
-    //     password: "admin",
-    //     role: "admin",
-    //     status: "approved",
-    //     createdAt: new Date().toISOString(),
-    //   });
-    // }
-
-    localStorage.setItem("users", JSON.stringify(users));
-  }, []);
-
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // ---------- handlers ----------
+  const handleRegisterChange = (e) => {
+    const { name, value } = e.target;
+    setRegisterForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister = () => {
-    if (!formData.name || !formData.email || !formData.password) {
-      setMessage("⚠️ Please fill all fields.");
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // ---------- REGISTER ----------
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+    if (!registerForm.name || !registerForm.email || !registerForm.password) {
+      setMessage("⚠️ Please fill name, email and password.");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const existingUser = users.find(
-      (u) => u.email === formData.email && u.role === role
-    );
-
-    if (existingUser) {
-      setMessage("❌ User already registered with this email and role.");
+    if (users.find((u) => u.email === registerForm.email)) {
+      setMessage("A user with this email already exists.");
       return;
     }
 
-    // professionals need admin approval => pending
-    const newUser = {
-      ...formData,
-      role,
-      status: role === "professional" ? "pending" : "approved",
-      createdAt: new Date().toISOString(),
-    };
+    let newUser;
+
+    if (activeRole === "user") {
+      // normal user
+      newUser = {
+        name: registerForm.name,
+        email: registerForm.email,
+        password: registerForm.password,
+        role: "user",
+        createdAt: new Date().toISOString(),
+      };
+    } else if (activeRole === "professional") {
+      // professional – needs extra fields
+      if (
+        !registerForm.phone ||
+        !registerForm.aadhaar ||
+        !registerForm.gender ||
+        !registerForm.experience ||
+        !registerForm.skill ||
+        !registerForm.area ||
+        !registerForm.avgCharge
+      ) {
+        setMessage("⚠️ Please fill all professional details.");
+        return;
+      }
+
+      newUser = {
+        name: registerForm.name,
+        email: registerForm.email,
+        password: registerForm.password,
+        phone: registerForm.phone,
+        aadhaar: registerForm.aadhaar,
+        gender: registerForm.gender,
+        experience: registerForm.experience,
+        skill: registerForm.skill,
+        area: registerForm.area,
+        avgCharge: registerForm.avgCharge, // 💰 saved here
+        role: "professional",
+        status: "pending", // admin will approve
+        createdAt: new Date().toISOString(),
+      };
+    } else {
+      // admin registration
+      newUser = {
+        name: registerForm.name,
+        email: registerForm.email,
+        password: registerForm.password,
+        role: "admin",
+        createdAt: new Date().toISOString(),
+      };
+    }
 
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
 
-    setMessage(
-      role === "professional"
-        ? "✅ Registered as Professional. Waiting for admin approval."
-        : "✅ Registered successfully! You can now login."
-    );
-
-    setFormData({ name: "", email: "", password: "" });
-    setIsLogin(true);
+    setMessage("✅ Registered successfully! You can login now.");
+    setMode("login");
+    setLoginForm({ email: registerForm.email, password: "" });
   };
 
-  const handleLogin = () => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+  // ---------- LOGIN ----------
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
     const user = users.find(
       (u) =>
-        u.email === formData.email &&
-        u.password === formData.password &&
-        u.role === role
+        u.email === loginForm.email &&
+        u.password === loginForm.password &&
+        u.role === activeRole
     );
 
     if (!user) {
-      setMessage("❌ Invalid credentials or wrong role selected.");
+      setMessage("❌ Invalid credentials for selected role.");
       return;
     }
 
-    if (user.role === "professional" && user.status !== "approved") {
-      setMessage("⏳ Your professional account is not approved yet by admin.");
-      return;
-    }
-
-    // save current logged in user for route protection
     localStorage.setItem("currentUser", JSON.stringify(user));
 
-    setMessage(`✅ Welcome back, ${user.name}!`);
-
-    // redirect based on role
     if (user.role === "admin") {
       navigate("/admin");
     } else if (user.role === "professional") {
@@ -111,124 +145,277 @@ export default function User() {
     }
   };
 
-  const cardClasses =
-    theme === "dark"
-      ? "bg-slate-800 text-slate-50"
-      : "bg-white text-slate-900";
+  // ---------- UI helpers ----------
+  const inputBase =
+    "w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const labelBase = "block text-xs mb-1 text-slate-200";
 
-  const inputClasses =
-    theme === "dark"
-      ? "w-full p-2 mb-3 border rounded-lg bg-slate-700 text-white"
-      : "w-full p-2 mb-3 border rounded-lg bg-white text-slate-900";
+  const tabButton = (role, label) => (
+    <button
+      type="button"
+      onClick={() => {
+        setActiveRole(role);
+        setMessage("");
+      }}
+      className={`flex-1 text-xs py-2 rounded-md border ${
+        activeRole === role
+          ? "bg-blue-600 text-white border-blue-600"
+          : "bg-slate-800 text-slate-200 border-slate-600"
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-6">
-      <div
-        className={`${cardClasses} shadow-2xl rounded-2xl p-8 w-full max-w-md transition-colors`}
-      >
-        <h1 className="text-3xl font-bold text-center mb-6">
-          {isLogin ? "Login" : "Register"}
-        </h1>
+    <div className="flex justify-center items-center py-10">
+      <div className="w-full max-w-md bg-slate-900/90 border border-slate-700 rounded-3xl shadow-2xl p-8">
+        <h1 className="text-2xl font-bold text-center mb-6">Register / Login</h1>
 
-        {/* Role selection */}
-        <div className="flex justify-center mb-4">
+        {/* mode switch */}
+        <div className="flex mb-4 text-sm border border-slate-700 rounded-full overflow-hidden">
           <button
-            onClick={() => setRole("user")}
-            className={`px-4 py-2 rounded-l-lg border text-sm ${
-              role === "user"
+            type="button"
+            onClick={() => {
+              setMode("register");
+              setMessage("");
+            }}
+            className={`flex-1 py-2 ${
+              mode === "register"
                 ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-slate-800"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
-            User
+            Register
           </button>
           <button
-            onClick={() => setRole("professional")}
-            className={`px-4 py-2 border text-sm ${
-              role === "professional"
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setMessage("");
+            }}
+            className={`flex-1 py-2 ${
+              mode === "login"
                 ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-slate-800"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
-            Professional
-          </button>
-          <button
-            onClick={() => setRole("admin")}
-            className={`px-4 py-2 rounded-r-lg border text-sm ${
-              role === "admin"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-slate-800"
-            }`}
-          >
-            Admin
+            Login
           </button>
         </div>
 
-        {/* Form */}
-        {!isLogin && (
-          <input
-            type="text"
-            name="name"
-            placeholder="Full name"
-            value={formData.name}
-            onChange={handleChange}
-            className={inputClasses}
-          />
+        {/* role tabs */}
+        <div className="flex gap-1 mb-6">
+          {tabButton("user", "User")}
+          {tabButton("professional", "Professional")}
+          {tabButton("admin", "Admin")}
+        </div>
+
+        {/* REGISTER FORM */}
+        {mode === "register" && (
+          <form onSubmit={handleRegister} className="space-y-3">
+            {/* common fields */}
+            <div>
+              <label className={labelBase}>Full name</label>
+              <input
+                type="text"
+                name="name"
+                value={registerForm.name}
+                onChange={handleRegisterChange}
+                className={inputBase}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelBase}>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={registerForm.email}
+                onChange={handleRegisterChange}
+                className={inputBase}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelBase}>Password</label>
+              <input
+                type="password"
+                name="password"
+                value={registerForm.password}
+                onChange={handleRegisterChange}
+                className={inputBase}
+                required
+              />
+            </div>
+
+            {/* extra details only when Professional tab */}
+            {activeRole === "professional" && (
+              <>
+                <div>
+                  <label className={labelBase}>Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={registerForm.phone}
+                    onChange={handleRegisterChange}
+                    className={inputBase}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={labelBase}>Aadhaar Number</label>
+                  <input
+                    type="text"
+                    name="aadhaar"
+                    value={registerForm.aadhaar}
+                    onChange={handleRegisterChange}
+                    maxLength={12}
+                    className={inputBase}
+                    placeholder="1234‑5678‑9012"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelBase}>Gender</label>
+                    <select
+                      name="gender"
+                      value={registerForm.gender}
+                      onChange={handleRegisterChange}
+                      className={inputBase}
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={labelBase}>Experience (years)</label>
+                    <input
+                      type="number"
+                      name="experience"
+                      min="0"
+                      value={registerForm.experience}
+                      onChange={handleRegisterChange}
+                      className={inputBase}
+                      placeholder="e.g., 3"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* 💰 Average charge field */}
+                <div>
+                  <label className={labelBase}>Average Charge (₹)</label>
+                  <input
+                    type="number"
+                    name="avgCharge"
+                    min="0"
+                    value={registerForm.avgCharge}
+                    onChange={handleRegisterChange}
+                    className={inputBase}
+                    placeholder="e.g., 500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={labelBase}>Primary Skill</label>
+                  <select
+                    name="skill"
+                    value={registerForm.skill}
+                    onChange={handleRegisterChange}
+                    className={inputBase}
+                    required
+                  >
+                    <option value="">Select skill</option>
+                    <option value="Electrician">Electrician</option>
+                    <option value="Plumber">Plumber</option>
+                    <option value="Carpenter">Carpenter</option>
+                    <option value="Gardener">Gardener</option>
+                    <option value="Cook / Chef">Cook / Chef</option>
+                    <option value="Driver">Driver</option>
+                    <option value="Home Cleaning">Home Cleaning</option>
+                    <option value="Tutor">Tutor</option>
+                    <option value="Tailor">Tailor</option>
+                    <option value="Mechanic">Mechanic</option>
+                    <option value="Painter">Painter</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelBase}>Work Area / Location</label>
+                  <input
+                    type="text"
+                    name="area"
+                    value={registerForm.area}
+                    onChange={handleRegisterChange}
+                    className={inputBase}
+                    placeholder="e.g., Kukatpally, Hyderabad"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            {message && (
+              <p className="text-xs text-emerald-400 mt-1">{message}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-full"
+            >
+              Register as{" "}
+              {activeRole.charAt(0).toUpperCase() + activeRole.slice(1)}
+            </button>
+          </form>
         )}
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className={inputClasses}
-        />
+        {/* LOGIN FORM */}
+        {mode === "login" && (
+          <form onSubmit={handleLogin} className="space-y-3">
+            <div>
+              <label className={labelBase}>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={loginForm.email}
+                onChange={handleLoginChange}
+                className={inputBase}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelBase}>Password</label>
+              <input
+                type="password"
+                name="password"
+                value={loginForm.password}
+                onChange={handleLoginChange}
+                className={inputBase}
+                required
+              />
+            </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className={`${inputClasses} mb-4`}
-        />
+            {message && (
+              <p className="text-xs text-rose-400 mt-1">{message}</p>
+            )}
 
-        <button
-          onClick={isLogin ? handleLogin : handleRegister}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {isLogin ? "Login" : "Register"}
-        </button>
-
-        <p className="mt-4 text-center text-sm">
-          {isLogin ? (
-            <>
-              Don't have an account?{" "}
-              <button
-                onClick={() => setIsLogin(false)}
-                className="text-blue-400 hover:underline"
-              >
-                Register
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button
-                onClick={() => setIsLogin(true)}
-                className="text-blue-400 hover:underline"
-              >
-                Login
-              </button>
-            </>
-          )}
-        </p>
-
-        {message && (
-          <div className="mt-4 text-center text-sm font-semibold text-blue-300">
-            {message}
-          </div>
+            <button
+              type="submit"
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-full"
+            >
+              Login as{" "}
+              {activeRole.charAt(0).toUpperCase() + activeRole.slice(1)}
+            </button>
+          </form>
         )}
       </div>
     </div>

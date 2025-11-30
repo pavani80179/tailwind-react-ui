@@ -1,127 +1,107 @@
 // src/pages/admin/ApproveProfessionals.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../../context/AppContext";
 
 export default function ApproveProfessionals() {
-  const { state } = useApp();
-  const { theme } = state;
   const navigate = useNavigate();
-
   const [professionals, setProfessionals] = useState([]);
 
   useEffect(() => {
     const current = JSON.parse(localStorage.getItem("currentUser") || "null");
-    // only admin should see this page
     if (!current || current.role !== "admin") {
       navigate("/user");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
     const pros = users.filter((u) => u.role === "professional");
     setProfessionals(pros);
   }, [navigate]);
 
-  const updateProfessionalStatus = (email, newStatus) => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    const updatedUsers = users.map((u) =>
-      u.role === "professional" && u.email === email
-        ? { ...u, status: newStatus }
-        : u
+  const updateStatus = (email, status) => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const updated = users.map((u) =>
+      u.email === email ? { ...u, status } : u
     );
-
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setProfessionals(updatedUsers.filter((u) => u.role === "professional"));
+    localStorage.setItem("users", JSON.stringify(updated));
+    setProfessionals(updated.filter((u) => u.role === "professional"));
   };
 
-  const tableBase =
-    theme === "dark"
-      ? "bg-slate-800 text-slate-50"
-      : "bg-white text-slate-900";
-
-  const chipClass = (status) => {
-    const base = "px-2 py-1 rounded-full text-xs font-medium";
-    if (status === "approved") {
-      return (
-        base +
-        " bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-      );
-    }
-    if (status === "pending") {
-      return (
-        base +
-        " bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-      );
-    }
-    if (status === "rejected") {
-      return (
-        base +
-        " bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-      );
-    }
-    return (
-      base +
-      " bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-    );
-  };
+  const truncateAadhaar = (aadhaar = "") =>
+    aadhaar.length >= 4 ? `XXXX‑XXXX‑${aadhaar.slice(-4)}` : aadhaar;
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold mb-2">Approve Professionals</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Review newly registered professionals and update their approval
-          status.
+        <p className="text-sm text-slate-500">
+          Review details of registered professionals and approve or reject them.
         </p>
       </header>
 
-      <div className={`${tableBase} rounded-xl shadow p-4 overflow-x-auto`}>
+      <div className="overflow-x-auto bg-white rounded-2xl shadow p-4">
         {professionals.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-300">
+          <p className="text-sm text-slate-500">
             No professional registrations yet.
           </p>
         ) : (
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="text-left py-2 pr-4">Name</th>
-                <th className="text-left py-2 pr-4">Email</th>
-                <th className="text-left py-2 pr-4">Status</th>
-                <th className="text-left py-2 pr-4">Actions</th>
+              <tr className="border-b border-slate-200 text-left">
+                <th className="py-2 pr-3">Name</th>
+                <th className="py-2 pr-3">Email</th>
+                <th className="py-2 pr-3">Skill</th>
+                <th className="py-2 pr-3">Experience</th>
+                <th className="py-2 pr-3">Area</th>
+                <th className="py-2 pr-3">Gender</th>
+                <th className="py-2 pr-3">Aadhaar</th>
+                <th className="py-2 pr-3">Status</th>
+                <th className="py-2 pr-3">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {professionals.map((pro) => (
+              {professionals.map((p) => (
                 <tr
-                  key={pro.email}
-                  className="border-b border-slate-100 dark:border-slate-700/60"
+                  key={p.email}
+                  className="border-b border-slate-100 last:border-0"
                 >
-                  <td className="py-2 pr-4">{pro.name}</td>
-                  <td className="py-2 pr-4">{pro.email}</td>
-                  <td className="py-2 pr-4">
-                    <span className={chipClass(pro.status || "pending")}>
-                      {pro.status || "pending"}
+                  <td className="py-2 pr-3">{p.name}</td>
+                  <td className="py-2 pr-3">{p.email}</td>
+                  <td className="py-2 pr-3">{p.skill}</td>
+                  <td className="py-2 pr-3">
+                    {p.experience ? `${p.experience} yrs` : "-"}
+                  </td>
+                  <td className="py-2 pr-3">{p.area}</td>
+                  <td className="py-2 pr-3">{p.gender}</td>
+                  <td className="py-2 pr-3">{truncateAadhaar(p.aadhaar)}</td>
+                  <td className="py-2 pr-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-[11px] ${
+                        p.status === "approved"
+                          ? "bg-emerald-100 text-emerald-600"
+                          : p.status === "rejected"
+                          ? "bg-rose-100 text-rose-600"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {p.status || "pending"}
                     </span>
                   </td>
-                  <td className="py-2 pr-4 space-x-2">
-                    <button
-                      onClick={() =>
-                        updateProfessionalStatus(pro.email, "approved")
-                      }
-                      className="px-3 py-1 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() =>
-                        updateProfessionalStatus(pro.email, "rejected")
-                      }
-                      className="px-3 py-1 text-xs rounded-lg bg-rose-600 text-white hover:bg-rose-700"
-                    >
-                      Reject
-                    </button>
+                  <td className="py-2 pr-3">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => updateStatus(p.email, "approved")}
+                        className="px-2 py-1 rounded-full bg-emerald-500 text-white"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => updateStatus(p.email, "rejected")}
+                        className="px-2 py-1 rounded-full bg-rose-500 text-white"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
